@@ -3,6 +3,7 @@ package gochimp3
 import (
 	"errors"
 	"fmt"
+	"time"
 )
 
 const (
@@ -94,7 +95,19 @@ type MemberTag struct {
 	Name string `json:"name"`
 }
 
-func (list ListResponse) GetMembers(params *InterestCategoriesQueryParams) (*ListOfMembers, error) {
+type MembersQueryParams struct {
+	ExtendedQueryParams
+
+	SinceTimestampOpt time.Time `json:"since_timestamp_opt"`
+}
+
+func (q MembersQueryParams) Params() map[string]string {
+	m := q.ExtendedQueryParams.Params()
+	m["since_timestamp_opt"] = q.SinceTimestampOpt.Format(timeFormat)
+	return m
+}
+
+func (list ListResponse) GetMembers(params *MembersQueryParams) (*ListOfMembers, error) {
 	if err := list.CanMakeRequest(); err != nil {
 		return nil, err
 	}
