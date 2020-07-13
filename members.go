@@ -137,7 +137,9 @@ type MembersQueryParams struct {
 
 func (q MembersQueryParams) Params() map[string]string {
 	m := q.ExtendedQueryParams.Params()
-	m["since_timestamp_opt"] = q.SinceTimestampOpt.Format(timeFormat)
+	if !q.SinceTimestampOpt.IsZero() {
+		m["since_timestamp_opt"] = q.SinceTimestampOpt.Format(timeFormat)
+	}
 	return m
 }
 
