@@ -1,6 +1,7 @@
 package gochimp3
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -37,8 +38,41 @@ type MemberRequest struct {
 	IPOpt           string                 `json:"ip_opt,omitempty"`
 	IPSignup        string                 `json:"ip_signup,omitempty"`
 	Tags            []interface{}          `json:"tags,omitempty"`
-	TimestampSignup string                 `json:"timestamp_signup,omitempty"`
-	TimestampOpt    string                 `json:"timestamp_opt,omitempty"`
+	TimestampSignup time.Time              `json:"timestamp_signup,omitempty"`
+	TimestampOpt    time.Time              `json:"timestamp_opt,omitempty"`
+}
+
+func (mr *MemberRequest) MarshalJSON() ([]byte, error) {
+	type Alias MemberRequest
+	return json.Marshal(&struct {
+		*Alias
+		TimestampSignup string `json:"timestamp_signup,omitempty"`
+		TimestampOpt    string `json:"timestamp_opt,omitempty"`
+	}{
+		TimestampSignup: mr.TimestampSignup.Format(timeFormat),
+		TimestampOpt:    mr.TimestampOpt.Format(timeFormat),
+		Alias:           (*Alias)(mr),
+	})
+}
+
+func (mr *MemberRequest) UnmarshalJSON(data []byte) error {
+	type Alias MemberRequest
+	var temp struct {
+		Alias
+		TimestampSignup string `json:"timestamp_signup,omitempty"`
+		TimestampOpt    string `json:"timestamp_opt,omitempty"`
+	}
+
+	err := json.Unmarshal(data, &temp)
+	if err != nil {
+		return err
+	}
+
+	temp.Alias.TimestampSignup, _ = time.Parse(timeFormat, temp.TimestampSignup)
+	temp.Alias.TimestampOpt, _ = time.Parse(timeFormat, temp.TimestampOpt)
+
+	*mr = MemberRequest(temp.Alias)
+	return nil
 }
 
 type Member struct {
