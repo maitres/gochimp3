@@ -44,15 +44,20 @@ type MemberRequest struct {
 
 func (mr *MemberRequest) MarshalJSON() ([]byte, error) {
 	type Alias MemberRequest
-	return json.Marshal(&struct {
+	var tmp = struct {
 		*Alias
 		TimestampSignup string `json:"timestamp_signup,omitempty"`
 		TimestampOpt    string `json:"timestamp_opt,omitempty"`
 	}{
-		TimestampSignup: mr.TimestampSignup.Format(timeFormat),
-		TimestampOpt:    mr.TimestampOpt.Format(timeFormat),
-		Alias:           (*Alias)(mr),
-	})
+		Alias: (*Alias)(mr),
+	}
+	if !mr.TimestampSignup.IsZero() {
+		tmp.TimestampSignup = mr.TimestampSignup.Format(timeFormat)
+	}
+	if !mr.TimestampOpt.IsZero() {
+		tmp.TimestampOpt = mr.TimestampOpt.Format(timeFormat)
+	}
+	return json.Marshal(&tmp)
 }
 
 func (mr *MemberRequest) UnmarshalJSON(data []byte) error {
